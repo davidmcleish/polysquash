@@ -5,12 +5,11 @@ import (
 	"math"
 )
 
-type Token string
 type Code string
 
 type tree struct {
 	freq        int
-	leaf        Token
+	leaf        string
 	left, right *tree
 }
 
@@ -18,9 +17,9 @@ func (t *tree) String() string {
 	return fmt.Sprintf("%+v", *t)
 }
 
-func CreateHuffman(tokens []Token) map[Token]Code {
+func CreateHuffman(tokens []string) map[string]Code {
 	if len(tokens) == 0 {
-		return map[Token]Code{}
+		return map[string]Code{}
 	}
 	// TODO: index
 	var forest []*tree
@@ -64,12 +63,12 @@ func CreateHuffman(tokens []Token) map[Token]Code {
 		forest[iMin2] = forest[len(forest)-1]
 		forest = forest[:len(forest)-1]
 	}
-	table := make(map[Token]Code)
+	table := make(map[string]Code)
 	forest[0].buildTable(table, "")
 	return table
 }
 
-func (t *tree) buildTable(table map[Token]Code, prefix Code) {
+func (t *tree) buildTable(table map[string]Code, prefix Code) {
 	if t.left == nil && t.right == nil {
 		table[t.leaf] = prefix
 	} else {
