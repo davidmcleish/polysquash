@@ -9,15 +9,14 @@ import (
 
 func main() {
 	points := []poly.Point{
-		{X: 0, Y: 0}, {X: 10, Y: 6}, {X: 7, Y: 11}, {X: -3, Y: 5},
+		{X: 2000, Y: 3000}, {X: 2010, Y: 3006}, {X: 2007, Y: 3001}, {X: 1997, Y: 2995},
 	}
-	var tokens []string
-	for i := range points {
-		g := poly.Gradient(poly.Sub(points[i], points[(i+1)%len(points)]))
-		fmt.Println(g)
-		tokens = append(tokens, g...)
-	}
+	tokens := poly.Quantise(points)
+	fmt.Println(tokens)
+
 	table := huffman.CreateHuffman(tokens)
 	fmt.Println(table)
-	// TODO: origin, scale
+
+	parsed, err := poly.Parse(tokens)
+	fmt.Println(parsed, err)
 }
