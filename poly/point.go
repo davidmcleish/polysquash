@@ -1,8 +1,9 @@
 package poly
 
 import (
-	"fmt"
 	"math"
+
+	"github.com/davidmcleish/polysquash/huffman"
 )
 
 type Point struct {
@@ -41,5 +42,9 @@ func Gradient(p Point) []string {
 		grad = ay / ax
 	}
 	dist := math.Sqrt(p.X*p.X + p.Y*p.Y)
-	return []string{dir, fmt.Sprintf("%.5f", grad), fmt.Sprintf("%.5f", dist)}
+
+	result := []string{dir}
+	result = append(result, huffman.Quantise(grad)...)
+	result = append(result, huffman.Quantise(dist)...)
+	return result
 }
