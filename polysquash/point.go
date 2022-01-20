@@ -1,4 +1,4 @@
-package poly
+package polysquash
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/davidmcleish/polysquash/huffman"
 	"github.com/juju/errors"
 )
 
@@ -20,7 +19,7 @@ func (a Point) Sub(b Point) Point {
 
 const epsilon = 1e-6
 
-func Quantise(pts []Point) []string {
+func QuantisePts(pts []Point) []string {
 	scale := 0.0
 	for i := 0; i < len(pts)-1; i++ {
 		p := pts[i]
@@ -75,18 +74,18 @@ func Gradient(p Point, scale float64) []string {
 	log.Println(dir, grad, dist, p)
 
 	result := []string{dir}
-	result = append(result, huffman.Quantise(grad)...)
-	result = append(result, huffman.Quantise(dist)...)
+	result = append(result, Quantise(grad)...)
+	result = append(result, Quantise(dist)...)
 	return result
 }
 
 func FromGradient(tok []string) (Point, error) {
 	dir := tok[0]
-	grad, err := huffman.FromQuantised(tok[1], tok[2])
+	grad, err := FromQuantised(tok[1], tok[2])
 	if err != nil {
 		return Point{}, errors.Trace(err)
 	}
-	dist, err := huffman.FromQuantised(tok[3], tok[4])
+	dist, err := FromQuantised(tok[3], tok[4])
 	if err != nil {
 		return Point{}, errors.Trace(err)
 	}
