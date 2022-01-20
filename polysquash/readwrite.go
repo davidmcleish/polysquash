@@ -20,11 +20,10 @@ type WKT struct{}
 func (t WKT) String() string { return "WKT" }
 
 func (t WKT) Encode(w io.Writer, poly geom.Polygon) error {
-	var wkt []byte
-	wkt = poly.AppendWKT(wkt)
-	_, err := w.Write(wkt)
+	_, err := w.Write([]byte(poly.AsText()))
 	return err
 }
+
 func (t WKT) Decode(r io.Reader) (*geom.Polygon, error) {
 	wkt, err := ioutil.ReadAll(r)
 	if err != nil {
