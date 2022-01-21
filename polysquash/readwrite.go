@@ -1,6 +1,8 @@
 package polysquash
 
 import (
+	"archive/zip"
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"io"
@@ -66,14 +68,14 @@ func (b WKB) Decode(r io.Reader) (*geom.Polygon, error) {
 }
 
 type Base64 struct {
-	Binary EncoderDecoder
+	Data EncoderDecoder
 }
 
-func (b Base64) String() string { return b.Binary.String() + "_b64" }
+func (b Base64) String() string { return b.Data.String() + "_b64" }
 
 func (b Base64) Encode(w io.Writer, poly geom.Polygon) error {
 	enc := base64.NewEncoder(base64.URLEncoding, w)
-	if err := b.Binary.Encode(enc, poly); err != nil {
+	if err := b.Data.Encode(enc, poly); err != nil {
 		return err
 	}
 	return enc.Close()
@@ -81,5 +83,39 @@ func (b Base64) Encode(w io.Writer, poly geom.Polygon) error {
 
 func (b Base64) Decode(r io.Reader) (*geom.Polygon, error) {
 	dec := base64.NewDecoder(base64.URLEncoding, r)
-	return b.Binary.Decode(dec)
+	return b.Data.Decode(dec)
+}
+
+type Zip struct {
+	Data EncoderDecoder
+}
+
+func (z Zip) String() string { return z.Data.String() + "_zip" }
+
+func (z Zip) Encode(w io.Writer, poly geom.Polygon) error {
+	zw := zip.NewWriter(w)
+	zf, err := zw.Create("poly")
+	if err != nil {
+		return err
+	}
+	if err := z.Data.Encode(zf, poly); err != nil {
+		return err
+	}
+	return zw.Close()
+}
+
+func (z Zip) Decode(r io.Reader) (*geom.Polygon, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return nil, err
+	}
+	zf, err := zr.Open("poly")
+	if err != nil {
+		return nil, err
+	}
+	return z.Data.Decode(zf)
 }
