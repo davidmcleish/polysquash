@@ -23,6 +23,7 @@ func main() {
 
 	candidates := []polysquash.EncoderDecoder{
 		polysquash.WKT{},
+		polysquash.HuffmanWKT{},
 	}
 
 	polys := []string{
@@ -36,18 +37,18 @@ func main() {
 		for _, c := range candidates {
 			var buf bytes.Buffer
 			if err := c.Encode(&buf, poly); err != nil {
-				log.Printf("%v Encode: %v", c, err)
+				log.Printf("%v\tEncode: %v", c, err)
 				continue
 			}
 			enc := buf.Bytes()
 			dec, err := c.Decode(bytes.NewBuffer(enc))
 			if err != nil {
-				log.Printf("%v Decode: %v", c, err)
+				log.Printf("%v\tDecode: %v", c, err)
 				continue
 			}
-			log.Printf("%v: %d bytes", c, len(enc))
+			log.Printf("%v\t%d bytes", c, len(enc))
 			// TODO: compare dec to poly
-			log.Printf("%v: %s", c, dec.AsText())
+			log.Printf("%v\t%s", c, dec.AsText())
 		}
 	}
 }

@@ -8,8 +8,6 @@ import (
 	"github.com/peterstace/simplefeatures/geom"
 )
 
-//import "github.com/dgryski/go-bitstream"
-
 type EncoderDecoder interface {
 	Encode(w io.Writer, poly geom.Polygon) error
 	Decode(r io.Reader) (*geom.Polygon, error)
