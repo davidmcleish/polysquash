@@ -150,7 +150,7 @@ func (g *Gradient) calcGradient(dx, dy float64) (int64, int64, int64) {
 }
 
 func (g *Gradient) addGradient(x, y float64, dir, grad, dist int64) (float64, float64) {
-	if grad == 0 {
+	if dist == 0 {
 		return x, y
 	}
 	gf := float64(grad) / g.Precision
