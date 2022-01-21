@@ -44,7 +44,7 @@ type Base64 struct {
 	Binary EncoderDecoder
 }
 
-func (b Base64) String() string { return b.Binary.String() + "b64" }
+func (b Base64) String() string { return b.Binary.String() + "_b64" }
 
 func (b Base64) Encode(w io.Writer, poly geom.Polygon) error {
 	enc := base64.NewEncoder(base64.URLEncoding, w)

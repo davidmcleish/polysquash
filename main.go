@@ -26,7 +26,7 @@ func main() {
 	candidates := []polysquash.EncoderDecoder{
 		polysquash.WKT{},
 		polysquash.Base64{Binary: polysquash.HuffmanWKT{}},
-		polysquash.Offset{Precision: 1 << 24},
+		polysquash.Base64{Binary: polysquash.Offset{Precision: 1 << 24}},
 	}
 
 	polys := []string{
