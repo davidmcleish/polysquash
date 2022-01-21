@@ -49,8 +49,11 @@ func main() {
 				log.Printf("%v\tDecode: %v", c, err)
 				continue
 			}
-			log.Printf("%v\t%d bytes", c, len(enc))
-			// TODO: compare dec to poly
+			diff, err := geom.SymmetricDifference(poly.AsGeometry(), dec.AsGeometry())
+			if err != nil {
+				log.Printf("%v\tSymmetric difference: %v", c, err)
+			}
+			log.Printf("%v\t%d bytes\tdiff %.4g", c, len(enc), diff.Area())
 			if false {
 				log.Printf("%v\t%s", c, dec.AsText())
 			}
