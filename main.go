@@ -23,7 +23,7 @@ func main() {
 
 	candidates := []polysquash.EncoderDecoder{
 		polysquash.WKT{},
-		polysquash.HuffmanWKT{},
+		polysquash.Base64{Binary: polysquash.HuffmanWKT{}},
 	}
 
 	polys := []string{

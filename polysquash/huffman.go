@@ -178,22 +178,6 @@ func (t *tree) writeHeader(w *bitstream.BitWriter) error {
 	return nil
 }
 
-// type bitReader struct {
-// 	*bitstream.BitReader
-// }
-
-// // Why doesn't BitReader have this???
-// func (r bitReader) Read(p []byte) (n int, err error) {
-// 	for i := range p {
-// 		b, err := r.BitReader.ReadByte()
-// 		if err != nil {
-// 			return i, err
-// 		}
-// 		p[i] = b
-// 	}
-// 	return len(p), nil
-// }
-
 func readHeader(r *bitstream.BitReader) (*tree, error) {
 	bit, err := r.ReadBit()
 	if err != nil {
