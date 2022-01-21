@@ -204,7 +204,7 @@ func readHeader(r *bitstream.BitReader) (*tree, error) {
 
 type HuffmanWKT struct{}
 
-func (t HuffmanWKT) String() string { return "HuffmanWKT" }
+func (t HuffmanWKT) String() string { return "HuffWKT" }
 
 func (t HuffmanWKT) Encode(w io.Writer, poly geom.Polygon) error {
 	wkt := poly.AsText()
