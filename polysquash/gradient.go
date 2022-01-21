@@ -24,12 +24,15 @@ func (g Gradient) Encode(w io.Writer, poly geom.Polygon) error {
 	tokens = append(tokens, x, y)
 	prevX := float64(x) / g.Precision
 	prevY := float64(y) / g.Precision
+	var prevGrad, prevDist [8]int64
 
 	for i := 1; i < pts.Length(); i++ {
 		p := pts.GetXY(i)
 		dir, grad, dist := g.calcGradient(p.X-prevX, p.Y-prevY)
-		tokens = append(tokens, dir, grad, dist)
+		tokens = append(tokens, dir, grad-prevGrad[dir], dist-prevDist[dir])
 		prevX, prevY = g.addGradient(prevX, prevY, dir, grad, dist)
+		prevGrad[dir] = grad
+		prevDist[dir] = dist
 	}
 
 	// fmt.Println(tokens)
@@ -55,15 +58,18 @@ func (g Gradient) Decode(r io.Reader) (*geom.Polygon, error) {
 	coords = append(coords, x0, y0)
 	prevX := x0
 	prevY := y0
+	var prevGrad, prevDist [8]int64
 
 	for i := 2; i+3 <= len(tokens); i += 3 {
 		dir := tokens[i]
-		grad := tokens[i+1]
-		dist := tokens[i+2]
+		grad := tokens[i+1] + prevGrad[dir]
+		dist := tokens[i+2] + prevDist[dir]
 		x, y := g.addGradient(prevX, prevY, dir, grad, dist)
 		coords = append(coords, x, y)
 		prevX = x
 		prevY = y
+		prevGrad[dir] = grad
+		prevDist[dir] = dist
 	}
 
 	// fmt.Println(coords)
