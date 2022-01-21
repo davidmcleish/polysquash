@@ -12,9 +12,9 @@ import (
 
 func main() {
 	candidates := []polysquash.EncoderDecoder{
-		// polysquash.WKT{},
-		// polysquash.Base64{Binary: polysquash.WKB{}},
-		// polysquash.Base64{Binary: polysquash.HuffmanWKT{}},
+		polysquash.WKT{},
+		polysquash.Base64{Binary: polysquash.WKB{}},
+		polysquash.Base64{Binary: polysquash.HuffmanWKT{}},
 		polysquash.Base64{Binary: polysquash.Offset{Precision: 1 << 24}},
 		polysquash.Base64{Binary: polysquash.Gradient{Precision: 1 << 24}},
 	}
@@ -26,6 +26,7 @@ func main() {
 		{"square", "POLYGON ((2000 3000, 2010 3006, 2007 3001, 1997 2995, 2000 3000))"},
 		{"small step", "POLYGON ((0 5, 0 6, 1 6, 1 7, 2 7, 2 8, 3 8, 3 9, 4 9, 4 10, 5 10, 5 9, 6 9, 6 8, 7 8, 7 7, 8 7, 9 6, 9 5, 10 5, 10 4, 9 4, 9 3, 8 3, 8 2, 7 2, 7 1, 6 1, 6 0, 5 0, 5 1, 4 1, 4 2, 3 2, 3 3, 2 3, 2 4, 1 4, 1 5, 0 5))"},
 		{"big step", stepPoly(151.196, -33.865, 0.00002, 0.00003, 100).AsText()},
+		{"big step with jitter", jitter(stepPoly(151.196, -33.865, 0.00002, 0.00003, 100), 1e-7).AsText()},
 		{"star", starPoly(-33.865, 151.196, 0.001, 0.001, 100).AsText()},
 		{"circle", circlePoly(-33.865, 151.196, 0.001, 100).AsText()},
 	}
@@ -97,6 +98,28 @@ func stepPoly(ox, oy, dx, dy float64, npoints int) geom.Polygon {
 			pts = append(pts, x, y)
 		}
 		dx, dy = -dy, dx
+	}
+	// Close the polygon
+	pts = append(pts, pts[0], pts[1])
+	ls, err := geom.NewLineString(geom.NewSequence(pts, geom.DimXY))
+	if err != nil {
+		panic(err)
+	}
+	poly, err := geom.NewPolygon([]geom.LineString{ls})
+	if err != nil {
+		panic(err)
+	}
+	return poly
+}
+
+func jitter(inPoly geom.Polygon, amount float64) geom.Polygon {
+	r := rand.New(rand.NewSource(2345))
+	seq := inPoly.DumpCoordinates()
+	pts := make([]float64, 0, seq.Length()*2)
+	for i := 0; i < seq.Length(); i++ {
+		p := seq.GetXY(i)
+		pts = append(pts, p.X+r.NormFloat64()*amount)
+		pts = append(pts, p.Y+r.NormFloat64()*amount)
 	}
 	// Close the polygon
 	pts = append(pts, pts[0], pts[1])
