@@ -18,6 +18,7 @@ func main() {
 		polysquash.Base64{Data: polysquash.HuffmanWKT{}},
 		polysquash.Base64{Data: polysquash.Offset{Precision: 1 << 24}},
 		polysquash.Base64{Data: polysquash.Gradient{Precision: 1 << 24}},
+		polysquash.Geobuf{},
 	}
 
 	polys := []struct {

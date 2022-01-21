@@ -7,4 +7,10 @@ require (
 	github.com/peterstace/simplefeatures v0.35.0
 )
 
-require github.com/dgryski/go-bitstream v0.0.0-20180413035011-3522498ce2c8
+require (
+	github.com/cairnapp/go-geobuf v0.0.1
+	github.com/dgryski/go-bitstream v0.0.0-20180413035011-3522498ce2c8
+	github.com/golang/protobuf v1.5.2
+)
+
+require google.golang.org/protobuf v1.26.0 // indirect
