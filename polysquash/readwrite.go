@@ -15,7 +15,7 @@ type EncoderDecoder interface {
 
 type WKT struct{}
 
-func (t WKT) String() string { return "WKT" }
+func (t WKT) String() string { return "WKT " }
 
 func (t WKT) Encode(w io.Writer, poly geom.Polygon) error {
 	_, err := w.Write([]byte(poly.AsText()))
