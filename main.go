@@ -12,9 +12,9 @@ import (
 
 func main() {
 	candidates := []polysquash.EncoderDecoder{
-		polysquash.WKT{},
-		polysquash.Base64{Binary: polysquash.WKB{}},
-		polysquash.Base64{Binary: polysquash.HuffmanWKT{}},
+		// polysquash.WKT{},
+		// polysquash.Base64{Binary: polysquash.WKB{}},
+		// polysquash.Base64{Binary: polysquash.HuffmanWKT{}},
 		polysquash.Base64{Binary: polysquash.Offset{Precision: 1 << 24}},
 		polysquash.Base64{Binary: polysquash.Gradient{Precision: 1 << 24}},
 	}

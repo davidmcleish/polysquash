@@ -101,6 +101,7 @@ func HuffmanEncode(w *bitstream.BitWriter, tokens []int64) error {
 	tree := CreateHuffman(tokens)
 	table := make(map[int64]Code)
 	tree.buildTable(table, "")
+	fmt.Println(table)
 
 	if err := tree.writeHeader(w); err != nil {
 		return err
