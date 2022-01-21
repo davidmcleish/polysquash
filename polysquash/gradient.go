@@ -1,6 +1,7 @@
 package polysquash
 
 import (
+	"fmt"
 	"io"
 	"math"
 
@@ -24,15 +25,17 @@ func (g Gradient) Encode(w io.Writer, poly geom.Polygon) error {
 	tokens = append(tokens, x, y)
 	prevX := float64(x) / g.Precision
 	prevY := float64(y) / g.Precision
+	var prevDist int64
 
 	for i := 1; i < pts.Length(); i++ {
 		p := pts.GetXY(i)
 		dir, grad, dist := g.calcGradient(p.X-prevX, p.Y-prevY)
-		tokens = append(tokens, dir, grad, dist)
+		tokens = append(tokens, dir, grad, dist-prevDist)
 		prevX, prevY = g.addGradient(prevX, prevY, dir, grad, dist)
+		prevDist = dist
 	}
 
-	// fmt.Println(tokens)
+	fmt.Println(tokens)
 
 	bw := bitstream.NewWriter(w)
 	if err := HuffmanEncode(bw, tokens); err != nil {
@@ -55,15 +58,17 @@ func (g Gradient) Decode(r io.Reader) (*geom.Polygon, error) {
 	coords = append(coords, x0, y0)
 	prevX := x0
 	prevY := y0
+	var prevDist int64
 
 	for i := 2; i+3 <= len(tokens); i += 3 {
 		dir := tokens[i]
 		grad := tokens[i+1]
-		dist := tokens[i+2]
+		dist := tokens[i+2] + prevDist
 		x, y := g.addGradient(prevX, prevY, dir, grad, dist)
 		coords = append(coords, x, y)
 		prevX = x
 		prevY = y
+		prevDist = dist
 	}
 
 	// fmt.Println(coords)
