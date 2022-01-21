@@ -40,6 +40,31 @@ func (t WKT) Decode(r io.Reader) (*geom.Polygon, error) {
 	return &poly, nil
 }
 
+type WKB struct{}
+
+func (b WKB) String() string { return "WKB" }
+
+func (b WKB) Encode(w io.Writer, poly geom.Polygon) error {
+	_, err := w.Write(poly.AsBinary())
+	return err
+}
+
+func (b WKB) Decode(r io.Reader) (*geom.Polygon, error) {
+	wkb, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	g, err := geom.UnmarshalWKB(wkb)
+	if err != nil {
+		return nil, err
+	}
+	poly, ok := g.AsPolygon()
+	if !ok {
+		return nil, errors.New("not a polygon George")
+	}
+	return &poly, nil
+}
+
 type Base64 struct {
 	Binary EncoderDecoder
 }
