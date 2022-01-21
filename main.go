@@ -26,12 +26,13 @@ func main() {
 	candidates := []polysquash.EncoderDecoder{
 		polysquash.WKT{},
 		polysquash.Base64{Binary: polysquash.HuffmanWKT{}},
+		polysquash.Offset{Precision: 1 << 24},
 	}
 
 	polys := []string{
 		"POLYGON ((2000 3000, 2010 3006, 2007 3001, 1997 2995, 2000 3000))",
 		"POLYGON ((0 5, 0 6, 1 6, 1 7, 2 7, 2 8, 3 8, 3 9, 4 9, 4 10, 5 10, 5 9, 6 9, 6 8, 7 8, 7 7, 8 7, 9 6, 9 5, 10 5, 10 4, 9 4, 9 3, 8 3, 8 2, 7 2, 7 1, 6 1, 6 0, 5 0, 5 1, 4 1, 4 2, 3 2, 3 3, 2 3, 2 4, 1 4, 1 5, 0 5))",
-		stepPoly(151.196, -33.865, 0.00002, 0.00003, 100).AsText(),
+		stepPoly(151.196, -33.865, 0.00002, 0.00003, 1000).AsText(),
 		randomStarPoly(-33.865, 151.196, 0.001, 1000).AsText(),
 	}
 
