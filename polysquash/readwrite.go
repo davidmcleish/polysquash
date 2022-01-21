@@ -90,7 +90,7 @@ type Zip struct {
 	Data EncoderDecoder
 }
 
-func (z Zip) String() string { return z.Data.String() + "_zip" }
+func (z Zip) String() string { return z.Data.String() + "_z" }
 
 func (z Zip) Encode(w io.Writer, poly geom.Polygon) error {
 	zw := zip.NewWriter(w)
