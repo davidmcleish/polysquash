@@ -14,14 +14,16 @@ func main() {
 	candidates := []polysquash.EncoderDecoder{
 		// polysquash.WKT{},
 		// polysquash.Base64{Data: polysquash.Zip{Data: polysquash.WKT{}}},
-		// polysquash.Base64{Data: polysquash.Gzip{Data: polysquash.WKT{}}},
+		polysquash.Base64{Data: polysquash.Gzip{Data: polysquash.WKT{}}},
 		// polysquash.Base64{Data: polysquash.WKB{}},
+		polysquash.Base64{Data: polysquash.Gzip{Data: polysquash.WKB{}}},
 		// polysquash.Base64{Data: polysquash.HuffmanWKT{}},
 		polysquash.Base64{Data: polysquash.Offset{Precision: 1 << 24}},
-		polysquash.Base64{Data: polysquash.Huffman{Data: polysquash.Offset{Precision: 1 << 24}}},
+		// polysquash.Base64{Data: polysquash.Huffman{Data: polysquash.Offset{Precision: 1 << 24}}},
 		polysquash.Base64{Data: polysquash.Gzip{Data: polysquash.Offset{Precision: 1 << 24}}},
 		// polysquash.Base64{Data: polysquash.Gradient{Precision: 1 << 24}},
 		// polysquash.Base64{Data: polysquash.Geobuf{}},
+		polysquash.Base64{Data: polysquash.Gzip{Data: polysquash.Geobuf{}}},
 	}
 
 	polys := []struct {
