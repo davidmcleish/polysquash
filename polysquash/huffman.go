@@ -1,6 +1,7 @@
 package polysquash
 
 import (
+	"bufio"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -240,4 +241,71 @@ func (t HuffmanWKT) Decode(r io.Reader) (*geom.Polygon, error) {
 		return nil, errors.New("not a polygon")
 	}
 	return &poly, nil
+}
+
+type Huffman struct {
+	Data EncoderDecoder
+}
+
+func (h Huffman) String() string { return h.Data.String() + "_h" }
+
+func (h Huffman) Encode(w io.Writer, poly geom.Polygon) error {
+	pr, pw := io.Pipe()
+	var done chan (error)
+	go func() {
+		done <- h.Data.Encode(pw, poly)
+	}()
+
+	var tokens []int64
+	br := bufio.NewReader(pr)
+	for {
+		tok, err := binary.ReadVarint(br)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil
+		}
+		tokens = append(tokens, tok)
+	}
+	pr.Close()
+	pw.Close()
+	if err := <-done; err != nil {
+		return err
+	}
+
+	bw := bitstream.NewWriter(w)
+	if err := HuffmanEncode(bw, tokens); err != nil {
+		return err
+	}
+	return bw.Flush(bitstream.Zero)
+}
+
+func (h Huffman) Decode(r io.Reader) (*geom.Polygon, error) {
+	pr, pw := io.Pipe()
+	type result struct {
+		poly *geom.Polygon
+		err  error
+	}
+	var done chan (result)
+	go func() {
+		poly, err := h.Data.Decode(pr)
+		done <- result{poly, err}
+	}()
+
+	br := bitstream.NewReader(r)
+	// TODO: make HuffmanDecode stream somehow
+	tokens, err := HuffmanDecode(br)
+	if err != nil {
+		return nil, err
+	}
+	buf := make([]byte, binary.MaxVarintLen64)
+	for _, tok := range tokens {
+		n := binary.PutVarint(buf, tok)
+		pw.Write(buf[:n])
+	}
+	pw.Close()
+	pr.Close()
+	res := <-done
+	return res.poly, res.err
 }
