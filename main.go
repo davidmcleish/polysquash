@@ -19,6 +19,7 @@ func main() {
 		// polysquash.Base64{Data: polysquash.HuffmanWKT{}},
 		polysquash.Base64{Data: polysquash.Offset{Precision: 1 << 24}},
 		polysquash.Base64{Data: polysquash.Huffman{Data: polysquash.Offset{Precision: 1 << 24}}},
+		polysquash.Base64{Data: polysquash.Gzip{Data: polysquash.Offset{Precision: 1 << 24}}},
 		// polysquash.Base64{Data: polysquash.Gradient{Precision: 1 << 24}},
 		// polysquash.Base64{Data: polysquash.Geobuf{}},
 	}
