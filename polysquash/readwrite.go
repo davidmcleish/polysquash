@@ -3,6 +3,7 @@ package polysquash
 import (
 	"archive/zip"
 	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"errors"
 	"io"
@@ -118,4 +119,26 @@ func (z Zip) Decode(r io.Reader) (*geom.Polygon, error) {
 		return nil, err
 	}
 	return z.Data.Decode(zf)
+}
+
+type Gzip struct {
+	Data EncoderDecoder
+}
+
+func (g Gzip) String() string { return g.Data.String() + "_gz" }
+
+func (g Gzip) Encode(w io.Writer, poly geom.Polygon) error {
+	zw := gzip.NewWriter(w)
+	if err := g.Data.Encode(zw, poly); err != nil {
+		return err
+	}
+	return zw.Close()
+}
+
+func (g Gzip) Decode(r io.Reader) (*geom.Polygon, error) {
+	zr, err := gzip.NewReader(r)
+	if err != nil {
+		return nil, err
+	}
+	return g.Data.Decode(zr)
 }
