@@ -251,9 +251,11 @@ func (h Huffman) String() string { return h.Data.String() + "_h" }
 
 func (h Huffman) Encode(w io.Writer, poly geom.Polygon) error {
 	pr, pw := io.Pipe()
-	var done chan (error)
+	done := make(chan error)
 	go func() {
-		done <- h.Data.Encode(pw, poly)
+		err := h.Data.Encode(pw, poly)
+		pw.Close()
+		done <- err
 	}()
 
 	var tokens []int64
@@ -269,7 +271,6 @@ func (h Huffman) Encode(w io.Writer, poly geom.Polygon) error {
 		tokens = append(tokens, tok)
 	}
 	pr.Close()
-	pw.Close()
 	if err := <-done; err != nil {
 		return err
 	}
@@ -287,9 +288,10 @@ func (h Huffman) Decode(r io.Reader) (*geom.Polygon, error) {
 		poly *geom.Polygon
 		err  error
 	}
-	var done chan (result)
+	done := make(chan result)
 	go func() {
 		poly, err := h.Data.Decode(pr)
+		pr.Close()
 		done <- result{poly, err}
 	}()
 
@@ -302,10 +304,34 @@ func (h Huffman) Decode(r io.Reader) (*geom.Polygon, error) {
 	buf := make([]byte, binary.MaxVarintLen64)
 	for _, tok := range tokens {
 		n := binary.PutVarint(buf, tok)
-		pw.Write(buf[:n])
+		if _, err := pw.Write(buf[:n]); err != nil {
+			return nil, err
+		}
 	}
 	pw.Close()
-	pr.Close()
 	res := <-done
 	return res.poly, res.err
+}
+
+type TokenWriter struct {
+	w io.Writer
+}
+
+func (tw TokenWriter) WriteTokens(tokens ...int64) error {
+	var buf [binary.MaxVarintLen64]byte
+	for _, tok := range tokens {
+		n := binary.PutVarint(buf[:], tok)
+		if _, err := tw.w.Write(buf[:n]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type TokenReader struct {
+	r io.ByteReader
+}
+
+func (tr TokenReader) ReadToken() (int64, error) {
+	return binary.ReadVarint(tr.r)
 }

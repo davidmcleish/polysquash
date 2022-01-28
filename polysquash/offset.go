@@ -1,10 +1,10 @@
 package polysquash
 
 import (
+	"bufio"
 	"io"
 	"math"
 
-	"github.com/dgryski/go-bitstream"
 	"github.com/peterstace/simplefeatures/geom"
 )
 
@@ -16,43 +16,42 @@ func (o Offset) String() string { return "Offset" }
 
 func (o Offset) Encode(w io.Writer, poly geom.Polygon) error {
 	pts := poly.DumpCoordinates()
-	tokens := make([]int64, pts.Length()*2)
+	tw := TokenWriter{w}
 
 	var prevX, prevY int64
 	for i := 0; i < pts.Length(); i++ {
 		p := pts.GetXY(i)
 		x := int64(math.Round(p.X * o.Precision))
 		y := int64(math.Round(p.Y * o.Precision))
-		tokens[i*2] = x - prevX
-		tokens[i*2+1] = y - prevY
+		if err := tw.WriteTokens(x-prevX, y-prevY); err != nil {
+			return err
+		}
 		prevX = x
 		prevY = y
 	}
-
-	bw := bitstream.NewWriter(w)
-	if err := HuffmanEncode(bw, tokens); err != nil {
-		return err
-	}
-	return bw.Flush(bitstream.Zero)
+	return nil
 }
 
 func (o Offset) Decode(r io.Reader) (*geom.Polygon, error) {
-	br := bitstream.NewReader(r)
-	tokens, err := HuffmanDecode(br)
-	if err != nil {
-		return nil, err
-	}
-
-	coords := make([]float64, len(tokens))
+	tr := TokenReader{bufio.NewReader(r)}
+	var coords []float64
 	var prevX, prevY int64
 
-	for i := 0; i+2 <= len(tokens); i += 2 {
-		xt := tokens[i]
-		yt := tokens[i+1]
+	for {
+		xt, err := tr.ReadToken()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		yt, err := tr.ReadToken()
+		if err != nil {
+			return nil, err
+		}
 		x := float64(xt+prevX) / o.Precision
 		y := float64(yt+prevY) / o.Precision
-		coords[i] = x
-		coords[i+1] = y
+		coords = append(coords, x, y)
 		prevX += xt
 		prevY += yt
 	}

@@ -1,10 +1,10 @@
 package polysquash
 
 import (
+	"bufio"
 	"io"
 	"math"
 
-	"github.com/dgryski/go-bitstream"
 	"github.com/peterstace/simplefeatures/geom"
 )
 
@@ -16,12 +16,16 @@ func (g Gradient) String() string { return "Gradnt" }
 
 func (g Gradient) Encode(w io.Writer, poly geom.Polygon) error {
 	pts := poly.DumpCoordinates()
-	tokens := make([]int64, 0, pts.Length()*3-1)
+	tw := TokenWriter{w}
 
 	p0 := pts.Get(0)
 	x := int64(math.Round(p0.X * g.Precision))
 	y := int64(math.Round(p0.Y * g.Precision))
-	tokens = append(tokens, x, y)
+
+	if err := tw.WriteTokens(x, y); err != nil {
+		return err
+	}
+
 	prevX := float64(x) / g.Precision
 	prevY := float64(y) / g.Precision
 	var prevGrad, prevDist [8]int64
@@ -29,41 +33,53 @@ func (g Gradient) Encode(w io.Writer, poly geom.Polygon) error {
 	for i := 1; i < pts.Length(); i++ {
 		p := pts.GetXY(i)
 		dir, grad, dist := g.calcGradient(p.X-prevX, p.Y-prevY)
-		tokens = append(tokens, dir, grad-prevGrad[dir], dist-prevDist[dir])
+		if err := tw.WriteTokens(dir, grad-prevGrad[dir], dist-prevDist[dir]); err != nil {
+			return err
+		}
 		prevX, prevY = g.addGradient(prevX, prevY, dir, grad, dist)
 		prevGrad[dir] = grad
 		prevDist[dir] = dist
 	}
-
-	// fmt.Println(tokens)
-
-	bw := bitstream.NewWriter(w)
-	if err := HuffmanEncode(bw, tokens); err != nil {
-		return err
-	}
-	return bw.Flush(bitstream.Zero)
+	return nil
 }
 
 func (g Gradient) Decode(r io.Reader) (*geom.Polygon, error) {
-	br := bitstream.NewReader(r)
-	tokens, err := HuffmanDecode(br)
+	tr := TokenReader{bufio.NewReader(r)}
+	var coords []float64
+
+	x0tok, err := tr.ReadToken()
 	if err != nil {
 		return nil, err
 	}
-
-	coords := make([]float64, 0, (len(tokens)+1)/3)
-
-	x0 := float64(tokens[0]) / g.Precision
-	y0 := float64(tokens[1]) / g.Precision
+	y0tok, err := tr.ReadToken()
+	if err != nil {
+		return nil, err
+	}
+	x0 := float64(x0tok) / g.Precision
+	y0 := float64(y0tok) / g.Precision
 	coords = append(coords, x0, y0)
 	prevX := x0
 	prevY := y0
 	var prevGrad, prevDist [8]int64
 
-	for i := 2; i+3 <= len(tokens); i += 3 {
-		dir := tokens[i]
-		grad := tokens[i+1] + prevGrad[dir]
-		dist := tokens[i+2] + prevDist[dir]
+	for {
+		dir, err := tr.ReadToken()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		grad, err := tr.ReadToken()
+		if err != nil {
+			return nil, err
+		}
+		dist, err := tr.ReadToken()
+		if err != nil {
+			return nil, err
+		}
+		grad += prevGrad[dir]
+		dist += prevDist[dir]
 		x, y := g.addGradient(prevX, prevY, dir, grad, dist)
 		coords = append(coords, x, y)
 		prevX = x

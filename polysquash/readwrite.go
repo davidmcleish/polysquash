@@ -72,7 +72,7 @@ type Base64 struct {
 	Data EncoderDecoder
 }
 
-func (b Base64) String() string { return b.Data.String() + "_b64" }
+func (b Base64) String() string { return b.Data.String() + "_b" }
 
 func (b Base64) Encode(w io.Writer, poly geom.Polygon) error {
 	enc := base64.NewEncoder(base64.URLEncoding, w)
